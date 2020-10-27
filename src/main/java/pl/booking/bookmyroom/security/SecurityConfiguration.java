@@ -7,16 +7,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import pl.booking.bookmyroom.security.service.MyUserDetailsService;
 
 import javax.sql.DataSource;
 
-@Configuration
+@EnableWebSecurity
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
-
-    Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
 
     private MyUserDetailsService userDetailsService;
 
@@ -28,8 +27,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth
             .userDetailsService(userDetailsService);
-        if(!auth.isConfigured())
-            logger.info("AuthenticationManager failed to configure.");
     }
 
     @Override
@@ -42,7 +39,13 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.GET, "/user/login").permitAll()
                 .antMatchers(HttpMethod.POST, "/user/register").permitAll()
                 .antMatchers(HttpMethod.POST, "/corporations/login").permitAll()
-                .antMatchers(HttpMethod.GET, "/logged").hasRole("USER");
+                .antMatchers(HttpMethod.GET, "/logged").hasRole("USER")
+            .and()
+                .formLogin()
+                    .loginPage("/login")
+                    .permitAll()
+            .and()
+                .httpBasic();
     }
 
     @Bean
