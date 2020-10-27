@@ -1,16 +1,15 @@
-package pl.booking.bookmyroom.user.controller;
+package pl.booking.bookmyroom.userservice.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.booking.bookmyroom.security.model.LoginStatus;
-import pl.booking.bookmyroom.user.model.User;
-import pl.booking.bookmyroom.user.model.UserLogInRequest;
-import pl.booking.bookmyroom.user.model.UserRegistrationRequest;
-import pl.booking.bookmyroom.user.service.UserService;
+import pl.booking.bookmyroom.userservice.model.User;
+import pl.booking.bookmyroom.userservice.model.UserLogInRequest;
+import pl.booking.bookmyroom.userservice.model.UserRegistrationRequest;
+import pl.booking.bookmyroom.userservice.service.UserService;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -22,18 +21,8 @@ public class UserController {
     @Autowired
     LoginStatus loginStatus;
 
-    private final UserService userService;
-
     @Autowired
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
-
-    @GetMapping(value = "/")
-    @ResponseStatus(code = HttpStatus.OK)
-    public String mainPage() {
-        return "<h1> Book a Room! </h1>";
-    }
+    private UserService userService;
 
     @PostMapping(value = "/register")
     @ResponseStatus(code = HttpStatus.CREATED)
@@ -46,19 +35,18 @@ public class UserController {
 
     @PostMapping(value = "/login")
     @ResponseStatus(code = HttpStatus.OK)
-    public ResponseEntity<String> tryLogIn(HttpServletRequest sReq, @RequestBody@Valid UserLogInRequest request){
-        if(!userService.tryLogIn(sReq, request))
+    public ResponseEntity<String> tryLogIn(@RequestBody@Valid UserLogInRequest request){
+        if(!userService.LogIn(request))
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         else {
-
             return new ResponseEntity<>(HttpStatus.OK);
         }
     }
 
-    //TODO remove this before release
-    @GetMapping(value = "/all")
+    //Todo: Delete in production code
+    @GetMapping(value = "/")
     @ResponseStatus(code = HttpStatus.OK)
-    public List<User> getAllUsers(){
-        return userService.getAllUsers();
+    public ResponseEntity<List<User>> showAll() {
+        return new ResponseEntity<>(userService.getAllUsers(), HttpStatus.OK);
     }
 }

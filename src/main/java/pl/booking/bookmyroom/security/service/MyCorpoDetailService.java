@@ -8,13 +8,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import pl.booking.bookmyroom.corporation.model.Corporation;
 import pl.booking.bookmyroom.corporation.model.CorporationRepository;
-import pl.booking.bookmyroom.security.model.MyCorpoDetails;
-import pl.booking.bookmyroom.security.model.MyUserDetails;
-import pl.booking.bookmyroom.user.model.User;
-import pl.booking.bookmyroom.user.repository.UserRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class MyCorpoDetailService implements UserDetailsService {

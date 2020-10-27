@@ -1,11 +1,10 @@
 package pl.booking.bookmyroom.security.model;
 
-import lombok.AllArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import pl.booking.bookmyroom.corporation.model.Corporation;
-import pl.booking.bookmyroom.user.model.User;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;

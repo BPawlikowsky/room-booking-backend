@@ -1,4 +1,4 @@
-package pl.booking.bookmyroom.user.model;
+package pl.booking.bookmyroom.userservice.model;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,7 +12,7 @@ import javax.validation.constraints.Email;
 @Getter @Setter
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     @Email
     @Column(unique = true)

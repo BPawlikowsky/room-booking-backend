@@ -1,29 +1,30 @@
-package pl.booking.bookmyroom.user.service;
+package pl.booking.bookmyroom.userservice.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.booking.bookmyroom.security.model.LoginStatus;
-import pl.booking.bookmyroom.user.model.User;
-import pl.booking.bookmyroom.user.model.UserLogInRequest;
-import pl.booking.bookmyroom.user.model.UserRegistrationRequest;
-import pl.booking.bookmyroom.user.repository.UserRepository;
+import pl.booking.bookmyroom.security.repository.AuthRepository;
+import pl.booking.bookmyroom.userservice.model.User;
+import pl.booking.bookmyroom.userservice.model.UserLogInRequest;
+import pl.booking.bookmyroom.userservice.model.UserRegistrationRequest;
+import pl.booking.bookmyroom.userservice.repository.UserRepository;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import java.util.List;
-
-import static org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY;
 
 @Service
 public class UserService {
+
+    Logger logger = LoggerFactory.getLogger(UserService.class);
 
     @Autowired
     LoginStatus loginStatus;
@@ -32,15 +33,12 @@ public class UserService {
     AuthenticationManager authManager;
 
     @Autowired
-    private final UserRepository userRepository;
+    private UserRepository userRepository;
+//    @Autowired
+//    private AuthRepository authRepository;
 
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
-
-    @Autowired
-    public UserService(UserRepository repository) {
-        this.userRepository = repository;
-    }
 
     public boolean createNewUser(UserRegistrationRequest request) {
         if(!userRepository.findByEmail(request.getEmail()).isEmpty()) {
@@ -55,7 +53,7 @@ public class UserService {
         user.setActive(true);
         user.setRoles("USER");
         user.setEmail(request.getEmail());
-        if(request.getPassword().equals(request.getPasswordValidCheck())){
+        if(request.getPassword().equals(request.getPasswordVerify())){
             String encodedPassword = bCryptPasswordEncoder.encode(request.getPassword());
             user.setPassword(encodedPassword);
         } else {
@@ -63,32 +61,36 @@ public class UserService {
         }
 
         token.setDetails(user);
-
+        userRepository.save(user);
         try {
             Authentication auth = authManager.authenticate(token);
             SecurityContextHolder.getContext().setAuthentication(auth);
 
         } catch (BadCredentialsException e) {
-            System.out.println("error");
+            System.out.println("Bad Credentials Exception: " + e.getMessage());
         }
-
-        userRepository.save(user);
+        
         return true;
     }
 
-    public boolean tryLogIn(HttpServletRequest sReq, UserLogInRequest request) {
+    public boolean LogIn(UserLogInRequest request) {
         if(userRepository.findByEmail(request.getEmail())
                 .stream()
                 .allMatch(u -> bCryptPasswordEncoder.matches(request.getPassword(), u.getPassword())))
         {
             UsernamePasswordAuthenticationToken authReq =
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());
-            Authentication auth = authManager.authenticate(authReq);
+            Authentication auth;
+            try{
+                auth = authManager.authenticate(authReq);
+            }
+            catch (AuthenticationException e) {
+                logger.info("Authentication error: " + e.getMessage() + " " + e.getCause().getMessage());
+                return false;
+            }
 
             SecurityContext sc = SecurityContextHolder.getContext();
             sc.setAuthentication(auth);
-            HttpSession session = sReq.getSession(true);
-            session.setAttribute(SPRING_SECURITY_CONTEXT_KEY, sc);
 
             loginStatus.setLoggedIn(true);
             loginStatus.setUsername(request.getEmail());
