@@ -4,10 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pl.booking.bookmyroom.security.model.LoginStatus;
 import pl.booking.bookmyroom.userservice.model.User;
-import pl.booking.bookmyroom.userservice.model.UserLogInRequest;
-import pl.booking.bookmyroom.userservice.model.UserRegistrationRequest;
+import pl.booking.bookmyroom.userservice.model.requests.UserLoginRequest;
+import pl.booking.bookmyroom.userservice.model.requests.CreateUserRequest;
 import pl.booking.bookmyroom.userservice.service.UserService;
 
 import javax.validation.Valid;
@@ -19,23 +18,20 @@ import java.util.List;
 public class UserController {
 
     @Autowired
-    LoginStatus loginStatus;
-
-    @Autowired
     private UserService userService;
 
-    @PostMapping(value = "/register")
+    @PostMapping(value = "/api/users")
     @ResponseStatus(code = HttpStatus.CREATED)
-    public ResponseEntity<String> registerNewUser (@RequestBody @Valid UserRegistrationRequest request){
+    public ResponseEntity<String> createUser (@RequestBody @Valid CreateUserRequest request){
         if(!userService.createNewUser(request))
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         else
             return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @PostMapping(value = "/login")
+    @PostMapping(value = "/api/login")
     @ResponseStatus(code = HttpStatus.OK)
-    public ResponseEntity<String> tryLogIn(@RequestBody@Valid UserLogInRequest request){
+    public ResponseEntity<String> loginUser(@RequestBody@Valid UserLoginRequest request){
         if(!userService.LogIn(request))
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         else {
@@ -44,9 +40,9 @@ public class UserController {
     }
 
     //Todo: Delete in production code
-    @GetMapping(value = "/")
+    @GetMapping(value = "/api/users")
     @ResponseStatus(code = HttpStatus.OK)
-    public ResponseEntity<List<User>> showAll() {
+    public ResponseEntity<List<User>> allUsers() {
         return new ResponseEntity<>(userService.getAllUsers(), HttpStatus.OK);
     }
 }

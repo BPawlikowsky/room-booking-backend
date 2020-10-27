@@ -7,8 +7,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.booking.bookmyroom.security.model.UserRole;
 import pl.booking.bookmyroom.userservice.model.User;
-import pl.booking.bookmyroom.userservice.model.UserLogInRequest;
-import pl.booking.bookmyroom.userservice.model.UserRegistrationRequest;
+import pl.booking.bookmyroom.userservice.model.requests.UserLoginRequest;
+import pl.booking.bookmyroom.userservice.model.requests.CreateUserRequest;
 import pl.booking.bookmyroom.userservice.repository.UserRepository;
 
 import java.util.List;
@@ -27,7 +27,7 @@ public class UserService {
          this.bCryptPasswordEncoder = passwordEncoder;
      }
 
-    public boolean createNewUser(UserRegistrationRequest request) {
+    public boolean createNewUser(CreateUserRequest request) {
         if(userRepository.findByUsername(request.getEmail()).isPresent()) {
             return false;
         }
@@ -47,7 +47,7 @@ public class UserService {
         return true;
     }
 
-    public boolean LogIn(UserLogInRequest request) {
+    public boolean LogIn(UserLoginRequest request) {
         if(userRepository.findByUsername(request.getEmail())
                 .stream()
                 .allMatch(u -> bCryptPasswordEncoder.matches(request.getPassword(), u.getPassword())))

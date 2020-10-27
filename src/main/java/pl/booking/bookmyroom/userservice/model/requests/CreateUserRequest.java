@@ -1,4 +1,4 @@
-package pl.booking.bookmyroom.userservice.model;
+package pl.booking.bookmyroom.userservice.model.requests;
 
 import lombok.Getter;
 
@@ -6,7 +6,7 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 
 @Getter
-public class UserRegistrationRequest {
+public class CreateUserRequest {
     @NotNull
     @Email
     private final String email;
@@ -15,7 +15,7 @@ public class UserRegistrationRequest {
     @NotNull
     private final String passwordVerify;
 
-    public UserRegistrationRequest(@NotNull @Email String email, @NotNull String password, @NotNull String passwordVerify) {
+    public CreateUserRequest(@NotNull @Email String email, @NotNull String password, @NotNull String passwordVerify) {
         this.email = email;
         this.password = password;
         this.passwordVerify = passwordVerify;
