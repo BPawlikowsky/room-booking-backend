@@ -5,8 +5,9 @@ import org.springframework.stereotype.Repository;
 import pl.booking.bookmyroom.userservice.model.User;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {
-    List<User> findByEmail(String email);
+    Optional<User> findByUsername(String username);
 }

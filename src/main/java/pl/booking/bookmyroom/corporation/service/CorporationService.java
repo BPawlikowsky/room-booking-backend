@@ -24,12 +24,6 @@ import static org.springframework.security.web.context.HttpSessionSecurityContex
 public class CorporationService {
 
     @Autowired
-    AuthenticationManager authManager;
-
-    @Autowired
-    LoginStatus loginStatus;
-
-    @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
     private final CorporationRepository corporationRepository;
@@ -61,20 +55,6 @@ public class CorporationService {
     public boolean loginCorporation(HttpServletRequest sReq, LoginCorporationRequest request) {
         if(getCorporationByEmail(request.getEmail()).stream()
                 .anyMatch(c -> bCryptPasswordEncoder.matches(request.getPassword(), c.getPassword()))) {
-
-            UsernamePasswordAuthenticationToken authReq =
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());
-            Authentication auth = authManager.authenticate(authReq);
-
-            SecurityContext sc = SecurityContextHolder.getContext();
-            sc.setAuthentication(auth);
-            HttpSession session = sReq.getSession(true);
-            session.setAttribute(SPRING_SECURITY_CONTEXT_KEY, sc);
-
-            loginStatus.setLoggedIn(true);
-            loginStatus.setUsername(request.getEmail());
-            corporationRepository.findByEmail(request.getEmail()).forEach(u -> loginStatus.setUserId(u.getId()));
-            corporationRepository.findByEmail(request.getEmail()).forEach(u -> loginStatus.setUserType(u.getRoles()));
             return true;
         } else return false;
     }

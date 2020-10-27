@@ -9,7 +9,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class LoggedResponse {
 
-    private UserType type;
+    private UserRole type;
 
     private String name;
 
