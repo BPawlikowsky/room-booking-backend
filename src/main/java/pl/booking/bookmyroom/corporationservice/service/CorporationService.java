@@ -1,5 +1,6 @@
 package pl.booking.bookmyroom.corporationservice.service;
 
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.booking.bookmyroom.corporationservice.exceptions.CorporationCreateException;
@@ -26,10 +27,18 @@ public class CorporationService {
         this.bCryptPasswordEncoder = passwordEncoder;
     }
 
-    public CorporationResponse addCorporation(CreateCorporationRequest request) throws CorporationCreateException {
+    public CorporationResponse createCorporation(CreateCorporationRequest request) throws CorporationCreateException {
         String status;
         if(corporationRepository.findCorporationByUsername(request.getUsername()).isPresent()) {
             status = "Corporation " + request.getUsername() + " already exists.";
+            throw new CorporationCreateException(status);
+        }
+        else if(request.getName().equals("")) {
+            status = "No name given.";
+            throw new CorporationCreateException(status);
+        }
+        else if(request.getUsername().equals("")) {
+            status = "No username given.";
             throw new CorporationCreateException(status);
         }
         else if(request.getPassword().equals("")) {
@@ -83,11 +92,11 @@ public class CorporationService {
         return corporationRepository.findAll();
     }
 
-    public Corporation getCorporationByUsername(String username) throws CorporationCreateException {
+    public Corporation getCorporationByUsername(String username) throws UsernameNotFoundException {
         return corporationRepository
                 .findCorporationByUsername(username)
                 .orElseThrow(
-                        () -> new CorporationCreateException("Corporation not found.")
+                        () -> new UsernameNotFoundException("Corporation not found.")
                 );
     }
 }

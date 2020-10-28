@@ -7,6 +7,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.booking.bookmyroom.security.model.UserRole;
 import pl.booking.bookmyroom.userservice.exceptions.CreateUserException;
+import pl.booking.bookmyroom.userservice.exceptions.LoginUserException;
 import pl.booking.bookmyroom.userservice.model.User;
 import pl.booking.bookmyroom.userservice.model.requests.LoginUserRequest;
 import pl.booking.bookmyroom.userservice.model.requests.CreateUserRequest;
@@ -63,10 +64,10 @@ public class UserService {
         );
     }
 
-    public UserResponse loginUser(LoginUserRequest request) {
+    public UserResponse loginUser(LoginUserRequest request) throws LoginUserException {
         String status;
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new UsernameNotFoundException("Could not find user " + request.getUsername()));
+                .orElseThrow(() -> new LoginUserException("Could not find user " + request.getUsername()));
         if(userRepository.findByUsername(request.getUsername())
                 .stream()
                 .allMatch(u -> bCryptPasswordEncoder
@@ -75,7 +76,7 @@ public class UserService {
             status = "User " + user.getUsername() + " successfully logged in.";
         } else {
             status = "Could not find user " + request.getUsername();
-            throw new UsernameNotFoundException(status);
+            throw new LoginUserException(status);
         }
 
         return new UserResponse(request.getUsername(), status);

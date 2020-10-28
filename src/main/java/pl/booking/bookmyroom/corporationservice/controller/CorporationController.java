@@ -30,7 +30,7 @@ public class CorporationController {
     @PostMapping(value = "/")
     @ResponseStatus(code = HttpStatus.CREATED)
     public ResponseEntity<CorporationResponse> addCorporation(@RequestBody @Valid CreateCorporationRequest request) throws CorporationCreateException {
-        CorporationResponse response = corporationService.addCorporation(request);
+        CorporationResponse response = corporationService.createCorporation(request);
         if(!response.getStatus().matches(".* created"))
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         else
@@ -48,6 +48,7 @@ public class CorporationController {
             return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    //todo delete endpoint
     @GetMapping("/")
     @ResponseStatus(code = HttpStatus.OK)
     public List<Corporation> getAllCorporations(){

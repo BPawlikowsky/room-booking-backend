@@ -1,5 +1,6 @@
 package pl.booking.bookmyroom.userservice.service;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,13 +11,16 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import pl.booking.bookmyroom.security.model.UserRole;
 import pl.booking.bookmyroom.userservice.exceptions.CreateUserException;
+import pl.booking.bookmyroom.userservice.exceptions.LoginUserException;
 import pl.booking.bookmyroom.userservice.model.User;
 import pl.booking.bookmyroom.userservice.model.requests.CreateUserRequest;
 import pl.booking.bookmyroom.userservice.model.requests.LoginUserRequest;
@@ -37,25 +41,33 @@ class UserServiceTest {
 
     private Logger logger = LoggerFactory.getLogger(UserServiceTest.class);
 
-    @Mock
+    private User user;
+    @Autowired
     private UserRepository userRepository;
-    @Mock
+    @Autowired
     private BCryptPasswordEncoder passwordEncoder;
-    @InjectMocks
-    private UserService userService;
-
-    @Bean
-    public UserRepository getUserRepository() {
-        return mock(UserRepository.class);
-    }
+    @Autowired
+    private final UserService userService = new UserService(userRepository, passwordEncoder);
 
     @BeforeEach
-    public void initMocks(){
-        MockitoAnnotations.initMocks(this);
+    public void setupDatabase() {
+        user = new User();
+        user.setUsername("test01@test.com");
+        String encodedPassword = passwordEncoder.encode("test01");
+        user.setPassword(encodedPassword);
+        user.setRole(UserRole.USER);
+        if(userRepository.findByUsername(user.getUsername()).isEmpty())
+            userRepository.save(user);
+    }
+
+    @AfterEach
+    public void cleanupDatabase() {
+        userRepository.delete(user);
     }
 
     @Test
     void createUser_CREATED() throws CreateUserException {
+        userRepository.delete(user);
         CreateUserRequest request = new CreateUserRequest(
                 "test01@test.com",
                 "test01",
@@ -66,12 +78,13 @@ class UserServiceTest {
                 "User " + request.getUsername() + " created."
         );
         UserResponse actualResponse = userService.createUser(request);
-        assertEquals(actualResponse.getUsername(), expectedResponse.getUsername());
-        assertEquals(actualResponse.getStatus(), expectedResponse.getStatus());
+        assertEquals(expectedResponse.getUsername(), actualResponse.getUsername());
+        assertEquals(expectedResponse.getStatus(), actualResponse.getStatus());
     }
 
     @Test
     void createUser_BAD_REQUEST_No_username() throws CreateUserException {
+        userRepository.delete(user);
         CreateUserRequest request = new CreateUserRequest(
                 "",
                 "test01",
@@ -82,6 +95,7 @@ class UserServiceTest {
 
     @Test
     void createUser_BAD_REQUEST_No_password() throws CreateUserException {
+        userRepository.delete(user);
         CreateUserRequest request = new CreateUserRequest(
                 "test01@test.com",
                 "",
@@ -92,6 +106,7 @@ class UserServiceTest {
 
     @Test
     void createUser_BAD_REQUEST_Validation_no_match() throws CreateUserException {
+        userRepository.delete(user);
         CreateUserRequest request = new CreateUserRequest(
                 "test01@test.com",
                 "test01",
@@ -101,7 +116,7 @@ class UserServiceTest {
     }
 
     @Test
-    void loginUser_OK() {
+    void loginUser_OK() throws LoginUserException {
         LoginUserRequest request = new LoginUserRequest(
                 "test01@test.com",
                 "test01"
@@ -114,13 +129,30 @@ class UserServiceTest {
 
         UserResponse expectedResponse = new UserResponse(
                 request.getUsername(),
-                "User " + request.getUsername() + " logged in."
+                "User " + request.getUsername() + " successfully logged in."
         );
 
-        when(userRepository.findByUsername(anyString())).thenReturn(Optional.of(user));
         UserResponse actualResponse = userService.loginUser(request);
 
-        assertEquals(actualResponse.getUsername(), expectedResponse.getUsername());
-        assertEquals(actualResponse.getStatus(), expectedResponse.getStatus());
+        assertEquals(expectedResponse.getUsername(), actualResponse.getUsername());
+        assertEquals(expectedResponse.getStatus(), actualResponse.getStatus());
+    }
+
+    @Test
+    void loginUser_BAD_REQUEST_No_name() {
+        LoginUserRequest request = new LoginUserRequest(
+                "",
+                "test01"
+        );
+        assertThrows(LoginUserException.class, () -> userService.loginUser(request));
+    }
+
+    @Test
+    void loginUser_BAD_REQUEST_No_password() {
+        LoginUserRequest request = new LoginUserRequest(
+                "test01@test.com",
+                ""
+        );
+        assertThrows(LoginUserException.class, () -> userService.loginUser(request));
     }
 }

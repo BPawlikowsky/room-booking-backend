@@ -92,7 +92,7 @@ public class UserServiceExceptionHandler extends ResponseEntityExceptionHandler 
         return handleExceptionInternal(ex, bodyOfResponse, header, HttpStatus.BAD_REQUEST, request);
     }
 
-    @ExceptionHandler({UsernameNotFoundException.class})
+    @ExceptionHandler(LoginUserException.class)
     protected ResponseEntity<Object> handleUserLogin(UsernameNotFoundException ex, WebRequest request) {
         JsonObject responseBody = new JsonObject();
         responseBody.addProperty("error", "err-usrlogin");

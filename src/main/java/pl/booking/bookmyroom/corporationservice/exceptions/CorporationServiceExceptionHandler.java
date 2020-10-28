@@ -24,6 +24,12 @@ public class CorporationServiceExceptionHandler extends ResponseEntityExceptionH
         responseBody.addProperty("message", "Create corporation request: " + ex.getMessage());
 
         switch (ex.getMessage()) {
+            case "No name given.":
+                responseBody.addProperty(
+                        "details",
+                        "No corporation name has been given, has to be a email account."
+                );
+                break;
             case "No username given.":
                 responseBody.addProperty(
                         "details",
