@@ -1,46 +1,56 @@
 package pl.booking.bookmyroom.userservice.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pl.booking.bookmyroom.userservice.exceptions.CreateUserException;
 import pl.booking.bookmyroom.userservice.model.User;
-import pl.booking.bookmyroom.userservice.model.requests.UserLoginRequest;
+import pl.booking.bookmyroom.userservice.model.requests.LoginUserRequest;
 import pl.booking.bookmyroom.userservice.model.requests.CreateUserRequest;
+import pl.booking.bookmyroom.userservice.model.responses.UserResponse;
 import pl.booking.bookmyroom.userservice.service.UserService;
 
 import javax.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api")
 @CrossOrigin
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
-    @PostMapping(value = "/api/users")
-    @ResponseStatus(code = HttpStatus.CREATED)
-    public ResponseEntity<String> createUser (@RequestBody @Valid CreateUserRequest request){
-        if(!userService.createNewUser(request))
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        else
-            return new ResponseEntity<>(HttpStatus.CREATED);
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
-    @PostMapping(value = "/api/login")
+    @PostMapping(value = "/users")
+    @ResponseStatus(code = HttpStatus.CREATED)
+    public ResponseEntity<UserResponse> createUser (@Valid @RequestBody CreateUserRequest request)
+            throws CreateUserException {
+        UserResponse response = userService.createUser(request);
+        if(response.getStatus().equals("User created."))
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
+        else
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    // A login checker to verify to the front that a user exists and
+    // can login with the needed credentials. This post request has to
+    // have an accompanying basic authentication in header of request.
+    @PostMapping(value = "/login")
     @ResponseStatus(code = HttpStatus.OK)
-    public ResponseEntity<String> loginUser(@RequestBody@Valid UserLoginRequest request){
-        if(!userService.LogIn(request))
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    public ResponseEntity<UserResponse> loginUser(@Valid @RequestBody LoginUserRequest request){
+        UserResponse response = userService.loginUser(request);
+        if(response.getStatus().equals("User " + request.getUsername() + " successfully logged in."))
+            return new ResponseEntity<>(response, HttpStatus.OK);
         else {
-            return new ResponseEntity<>(HttpStatus.OK);
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
     }
 
     //Todo: Delete in production code
-    @GetMapping(value = "/api/users")
+    @GetMapping(value = "/users")
     @ResponseStatus(code = HttpStatus.OK)
     public ResponseEntity<List<User>> allUsers() {
         return new ResponseEntity<>(userService.getAllUsers(), HttpStatus.OK);

@@ -21,11 +21,11 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Email
+    @Email(message="Should be an email")
     @Column(unique = true)
     private String username;
 
-    @Column(unique = true)
+    @Column
     private String password;
     private String role;
 

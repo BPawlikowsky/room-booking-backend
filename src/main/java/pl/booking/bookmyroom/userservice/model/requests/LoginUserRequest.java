@@ -1,20 +1,17 @@
 package pl.booking.bookmyroom.userservice.model.requests;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 
 @Getter
-public class UserLoginRequest {
+@AllArgsConstructor
+public class LoginUserRequest {
     @NotNull
     @Email
-    private final String email;
+    private final String username;
     @NotNull
     private final String password;
-
-    public UserLoginRequest(@NotNull @Email String email, @NotNull String password) {
-        this.email = email;
-        this.password = password;
-    }
 }
