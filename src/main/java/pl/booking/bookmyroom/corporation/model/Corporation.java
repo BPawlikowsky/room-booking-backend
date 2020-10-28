@@ -1,30 +1,18 @@
 package pl.booking.bookmyroom.corporation.model;
 
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import pl.booking.bookmyroom.userservice.model.User;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import java.util.List;
 
-@Entity
-@Data
-@NoArgsConstructor
-@Table(name = "corporations")
-public class Corporation {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+public class Corporation extends User {
 
+    @Setter @Getter
     private String name;
-
-    private String password;
-
-    @Email
-    @Column(unique = true)
-    private String email;
-
-    private boolean active;
-    private String roles;
 }

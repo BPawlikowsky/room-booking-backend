@@ -16,7 +16,6 @@ import java.util.List;
 public class ReservationController {
     private final ReservationService service;
 
-    @Autowired
     public ReservationController(ReservationService service) {
         this.service = service;
     }
@@ -37,7 +36,6 @@ public class ReservationController {
         else
             return new ResponseEntity<>(HttpStatus.OK);
     }
-
 
     @PutMapping
     @ResponseStatus(code = HttpStatus.OK)

@@ -15,7 +15,6 @@ public class HotelService {
     private final HotelRepository hotelRepository;
     private final RoomService roomService;
 
-    @Autowired
     public HotelService(HotelRepository hotelRepository, RoomService roomService) {
         this.hotelRepository = hotelRepository;
         this.roomService = roomService;

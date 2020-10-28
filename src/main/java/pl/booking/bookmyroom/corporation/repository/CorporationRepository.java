@@ -1,8 +1,9 @@
-package pl.booking.bookmyroom.corporation.model;
+package pl.booking.bookmyroom.corporation.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import pl.booking.bookmyroom.corporation.model.Corporation;
 
 import javax.validation.constraints.Email;
 import java.util.List;

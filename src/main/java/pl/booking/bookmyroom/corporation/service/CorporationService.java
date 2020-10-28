@@ -5,8 +5,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.booking.bookmyroom.corporation.model.Corporation;
 import pl.booking.bookmyroom.corporation.model.CreateCorporationRequest;
-import pl.booking.bookmyroom.corporation.model.CorporationRepository;
+import pl.booking.bookmyroom.corporation.repository.CorporationRepository;
 import pl.booking.bookmyroom.corporation.model.LoginCorporationRequest;
+import pl.booking.bookmyroom.security.model.UserRole;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -36,8 +37,8 @@ public class CorporationService {
             } else {
                 return false;
             }
-            corporation.setEmail(request.getEmail());
-            corporation.setRoles("CORPO");
+            corporation.setUsername(request.getEmail());
+            corporation.setRole(UserRole.CORP);
             corporationRepository.save(corporation);
             return true;
         }
