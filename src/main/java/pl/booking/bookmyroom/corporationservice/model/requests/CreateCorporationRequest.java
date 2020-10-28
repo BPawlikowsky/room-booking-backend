@@ -1,9 +1,8 @@
-package pl.booking.bookmyroom.corporation.model;
+package pl.booking.bookmyroom.corporationservice.model.requests;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Column;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 
@@ -18,9 +17,9 @@ public class CreateCorporationRequest {
     private String password;
 
     @NotNull
-    private String repeatedPassword;
+    private String passwordVerification;
 
     @NotNull
     @Email
-    private String email;
+    private String username;
 }

@@ -1,4 +1,4 @@
-package pl.booking.bookmyroom.userservice.model;
+package pl.booking.bookmyroom.corporationservice.model;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,10 +12,11 @@ import javax.validation.constraints.Email;
 import java.util.Collection;
 import java.util.Collections;
 
+
 @Entity
 @NoArgsConstructor
 @Getter @Setter
-public class User implements UserDetails {
+public class Corporation implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -27,6 +28,9 @@ public class User implements UserDetails {
     @Column
     private String password;
     private String role;
+
+    @Column(unique = true)
+    private String name;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

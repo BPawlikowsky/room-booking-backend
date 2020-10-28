@@ -1,30 +1,31 @@
 package pl.booking.bookmyroom.security.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import pl.booking.bookmyroom.userservice.model.User;
+import pl.booking.bookmyroom.corporationservice.repository.CorporationRepository;
 import pl.booking.bookmyroom.userservice.repository.UserRepository;
-
-import java.util.List;
 
 @Service
 public class MyUserDetailsService implements UserDetailsService {
 
     private UserRepository userRepository;
+    private CorporationRepository corporationRepository;
 
-    public MyUserDetailsService(UserRepository repository) {
+    public MyUserDetailsService(UserRepository repository, CorporationRepository corporationRepository) {
         this.userRepository = repository;
+        this.corporationRepository = corporationRepository;
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException(username + " not found"));
+        if(userRepository.findByUsername(username).isPresent())
+            return userRepository.findByUsername(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("User " + username + " not found"));
+        else
+            return corporationRepository.findCorporationByUsername(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("Corporation " + username + " not found"));
     }
 
 

@@ -45,7 +45,7 @@ public class UserService {
         else {
             User user = new User();
             user.setUsername(request.getUsername());
-            if (request.getPassword().equals(request.getPasswordVerify())) {
+            if (request.getPassword().equals(request.getPasswordVerification())) {
                 String encodedPassword = bCryptPasswordEncoder.encode(request.getPassword());
                 user.setPassword(encodedPassword);
                 user.setRole(UserRole.USER);

@@ -1,8 +1,6 @@
 package pl.booking.bookmyroom.hotel.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pl.booking.bookmyroom.corporation.model.Corporation;
 import pl.booking.bookmyroom.hotel.model.*;
 import pl.booking.bookmyroom.hotel.repository.HotelRepository;
 

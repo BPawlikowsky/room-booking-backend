@@ -1,4 +1,4 @@
-package pl.booking.bookmyroom.corporation.model;
+package pl.booking.bookmyroom.corporationservice.model.requests;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,7 +10,7 @@ import javax.validation.constraints.NotNull;
 public class LoginCorporationRequest {
 
     @NotNull
-    private String email;
+    private String username;
 
     @NotNull
     private String password;

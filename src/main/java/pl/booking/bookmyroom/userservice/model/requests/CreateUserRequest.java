@@ -15,5 +15,5 @@ public class CreateUserRequest {
     @NotNull
     private final String password;
     @NotNull
-    private final String passwordVerify;
+    private final String passwordVerification;
 }
