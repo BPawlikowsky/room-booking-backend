@@ -116,7 +116,7 @@ class CorporationServiceTest {
         );
         CorporationResponse expectedResponse = new CorporationResponse(
                 request.getUsername(),
-                "Corporation " + request.getUsername() + " successfully logged in."
+                "Corporation " + request.getUsername() + " successfully logged in"
         );
         CorporationResponse actualResponse = corporationService.loginCorporation(request);
         assertEquals(expectedResponse.getUsername(), actualResponse.getUsername());

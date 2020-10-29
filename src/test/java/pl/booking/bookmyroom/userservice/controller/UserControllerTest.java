@@ -11,11 +11,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import pl.booking.bookmyroom.userservice.exceptions.CreateUserException;
+import pl.booking.bookmyroom.userservice.exceptions.LoginUserException;
 import pl.booking.bookmyroom.userservice.model.requests.CreateUserRequest;
+import pl.booking.bookmyroom.userservice.model.requests.LoginUserRequest;
 import pl.booking.bookmyroom.userservice.model.responses.UserResponse;
 import pl.booking.bookmyroom.userservice.repository.UserRepository;
 import pl.booking.bookmyroom.userservice.service.UserService;
@@ -58,7 +59,7 @@ class UserControllerTest {
         doReturn(response).when(userService).createUser(request);
         ResponseEntity<UserResponse> expectedResponse = new ResponseEntity<>(response, HttpStatus.CREATED);
         ResponseEntity<UserResponse> actualResponse = userController.createUser(request);
-        assertEquals(actualResponse, expectedResponse);
+        assertEquals(expectedResponse, actualResponse);
     }
 
     @Test
@@ -95,6 +96,29 @@ class UserControllerTest {
     }
 
     @Test
-    void loginUser_OK() {
+    void loginUser_OK() throws LoginUserException {
+        LoginUserRequest request = new LoginUserRequest(
+                "test01@test.com",
+                "test01"
+        );
+        UserResponse response = new UserResponse(
+                request.getUsername(),
+                "User " + request.getUsername() + " successfully logged in."
+        );
+        doReturn(response).when(userService).loginUser(request);
+        ResponseEntity<UserResponse> expectedResponse = new ResponseEntity<>(response, HttpStatus.OK);
+        ResponseEntity<UserResponse> actualResponse = userController.loginUser(request);
+        assertEquals(expectedResponse, actualResponse);
+    }
+
+    @Test
+    void loginUser_BAD_REQUEST() throws LoginUserException {
+        LoginUserRequest request = new LoginUserRequest(
+                "",
+                "test01"
+        );
+
+        doThrow(LoginUserException.class).when(userService).loginUser(request);
+        assertThrows(LoginUserException.class, () -> userController.loginUser(request));
     }
 }

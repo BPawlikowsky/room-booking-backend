@@ -79,7 +79,7 @@ public class CorporationService {
                 .allMatch(u -> bCryptPasswordEncoder
                         .matches(request.getPassword(), u.getPassword()))
         ) {
-            status = "Corporation " + corporation.getUsername() + " successfully logged in.";
+            status = "Corporation " + corporation.getUsername() + " successfully logged in";
         } else {
             status = "Could not find corporation " + request.getUsername();
             throw new CorporationLoginException(status);

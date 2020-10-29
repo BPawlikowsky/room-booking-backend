@@ -29,12 +29,13 @@ public class CorporationController {
 
     @PostMapping(value = "/")
     @ResponseStatus(code = HttpStatus.CREATED)
-    public ResponseEntity<CorporationResponse> addCorporation(@RequestBody @Valid CreateCorporationRequest request) throws CorporationCreateException {
+    public ResponseEntity<CorporationResponse> createCorporation(@RequestBody @Valid CreateCorporationRequest request)
+            throws CorporationCreateException {
         CorporationResponse response = corporationService.createCorporation(request);
         if(!response.getStatus().matches(".* created"))
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         else
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
@@ -42,10 +43,10 @@ public class CorporationController {
     public ResponseEntity<CorporationResponse> loginCorporation(@RequestBody @Valid LoginCorporationRequest request)
             throws CorporationLoginException {
         CorporationResponse response = corporationService.loginCorporation(request);
-        if(!response.getStatus().matches(".* successfully logged in"))
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        else
+        if(response.getStatus().equals("Corporation " + request.getUsername() + " successfully logged in"))
             return new ResponseEntity<>(response, HttpStatus.OK);
+        else
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     //todo delete endpoint
