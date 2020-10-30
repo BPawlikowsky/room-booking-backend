@@ -1,12 +1,11 @@
-package pl.booking.bookmyroom.hotel.service;
+package pl.booking.bookmyroom.hotelservice.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import pl.booking.bookmyroom.hotel.model.AddRoomsToHotelRequest;
-import pl.booking.bookmyroom.hotel.model.RoomStandard;
-import pl.booking.bookmyroom.hotel.model.RoomType;
-import pl.booking.bookmyroom.hotel.repository.RoomRepository;
+import pl.booking.bookmyroom.hotelservice.model.requests.AddRoomsToHotelRequest;
+import pl.booking.bookmyroom.hotelservice.model.RoomStandard;
+import pl.booking.bookmyroom.hotelservice.model.RoomType;
+import pl.booking.bookmyroom.hotelservice.repository.RoomRepository;
 import pl.booking.bookmyroom.reservation.service.ReservationService;
 
 import java.util.Date;

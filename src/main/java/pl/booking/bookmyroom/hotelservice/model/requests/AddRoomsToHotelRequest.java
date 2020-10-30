@@ -1,12 +1,15 @@
-package pl.booking.bookmyroom.hotel.model;
+package pl.booking.bookmyroom.hotelservice.model.requests;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import pl.booking.bookmyroom.hotelservice.model.RoomStandard;
 
 import javax.validation.constraints.NotNull;
 
-@Getter
-@NoArgsConstructor
+@Data
+@AllArgsConstructor
 public class AddRoomsToHotelRequest {
     @NotNull
     private Float price;

@@ -1,4 +1,4 @@
-package pl.booking.bookmyroom.hotel.model;
+package pl.booking.bookmyroom.hotelservice.model;
 
 public enum RoomStandard {
     VIP,

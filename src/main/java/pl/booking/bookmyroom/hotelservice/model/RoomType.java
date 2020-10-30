@@ -1,4 +1,4 @@
-package pl.booking.bookmyroom.hotel.model;
+package pl.booking.bookmyroom.hotelservice.model;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

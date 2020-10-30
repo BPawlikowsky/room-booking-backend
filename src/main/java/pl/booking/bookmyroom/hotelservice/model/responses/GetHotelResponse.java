@@ -1,9 +1,11 @@
-package pl.booking.bookmyroom.hotel.model;
+package pl.booking.bookmyroom.hotelservice.model.responses;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import pl.booking.bookmyroom.hotelservice.model.Hotel;
+import pl.booking.bookmyroom.hotelservice.model.RoomType;
 
 
 import javax.validation.constraints.NotNull;

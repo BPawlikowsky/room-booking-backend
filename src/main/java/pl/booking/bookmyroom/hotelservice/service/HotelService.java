@@ -1,42 +1,81 @@
-package pl.booking.bookmyroom.hotel.service;
+package pl.booking.bookmyroom.hotelservice.service;
 
+import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pl.booking.bookmyroom.hotel.model.*;
-import pl.booking.bookmyroom.hotel.repository.HotelRepository;
+import pl.booking.bookmyroom.hotelservice.exceptions.CreateHotelException;
+import pl.booking.bookmyroom.hotelservice.exceptions.DeleteHotelException;
+import pl.booking.bookmyroom.hotelservice.model.responses.DeleteHotelResponse;
+import pl.booking.bookmyroom.hotelservice.model.*;
+import pl.booking.bookmyroom.hotelservice.model.requests.AddRoomsToHotelRequest;
+import pl.booking.bookmyroom.hotelservice.model.requests.CreateHotelRequest;
+import pl.booking.bookmyroom.hotelservice.model.requests.DeleteHotelRequest;
+import pl.booking.bookmyroom.hotelservice.model.requests.EditHotelRequest;
+import pl.booking.bookmyroom.hotelservice.model.responses.CreateHotelResponse;
+import pl.booking.bookmyroom.hotelservice.model.responses.GetHotelResponse;
+import pl.booking.bookmyroom.hotelservice.repository.HotelRepository;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor
 @Service
 public class HotelService {
 
-    private final HotelRepository hotelRepository;
-    private final RoomService roomService;
+    @Autowired
+    private HotelRepository hotelRepository;
+    @Autowired
+    private RoomService roomService;
 
     public HotelService(HotelRepository hotelRepository, RoomService roomService) {
         this.hotelRepository = hotelRepository;
         this.roomService = roomService;
     }
 
-    public void addHotel(CreateHotelRequest request) {
-        Hotel hotel = new Hotel();
-        hotel.setName(request.getName());
-        hotel.setCity(request.getCity());
-        hotel.setStreet(request.getStreet());
-        hotel.setStreetNumber(request.getStreetNumber());
-        hotel.setPhoneNumber(request.getPhoneNumber());
-        hotel.setStandard(request.getStandard());
-        hotel.setCorporationId(request.getCorporationId());
-        hotelRepository.save(hotel);
+    public CreateHotelResponse createHotel(CreateHotelRequest request) throws CreateHotelException {
+        Hotel hotel;
+        String status;
+        if(hotelRepository.findByNameAndCity(request.getName(), request.getCity()).isEmpty()) {
+            hotel = new Hotel();
+            hotel.setName(request.getName());
+            hotel.setCity(request.getCity());
+            hotel.setStreet(request.getStreet());
+            hotel.setStreetNumber(request.getStreetNumber());
+            hotel.setPhoneNumber(request.getPhoneNumber());
+            hotel.setStandard(request.getStandard());
+            hotel.setCorporationId(request.getCorporationId());
+            hotelRepository.save(hotel);
 
-        AddRoomsToHotelRequest[] roomsToHotelRequests = request.getRoomsToHotelRequests();
-        for (AddRoomsToHotelRequest r : roomsToHotelRequests) {
-            roomService.addRoomsToHotel(r, hotel.getId());
+            AddRoomsToHotelRequest[] roomsToHotelRequests = request.getRoomsToHotelRequests();
+            for (AddRoomsToHotelRequest r : roomsToHotelRequests) {
+                roomService.addRoomsToHotel(r, hotel.getId());
+            }
+            status = "Hotel successfully created";
+            return new CreateHotelResponse(
+                    hotel.getCity(),
+                    hotel.getName(),
+                    hotel.getCorporationId(),
+                    status
+                    );
+        } else {
+            status = "Hotel by the name " + request.getName() + " in " + request.getCity() + " city already exists.";
+            throw new CreateHotelException(status);
         }
     }
 
-    public void deleteHotel(DeleteHotelRequest request) {
-        hotelRepository.deleteById(request.getId());
+    public DeleteHotelResponse deleteHotel(DeleteHotelRequest request) throws DeleteHotelException {
+        String status;
+        if(hotelRepository.findById(request.getId()).isPresent()) {
+            hotelRepository.deleteById(request.getId());
+            status = "Hotel with id " + request.getId() + " deleted";
+        } else {
+            status = "Hotel with id " + request.getId() + " not found";
+            throw new DeleteHotelException(status);
+        }
+        return new DeleteHotelResponse(
+                request.getId(),
+                status
+        );
     }
 
     public List<GetHotelResponse> getAllHotels() {
@@ -58,9 +97,9 @@ public class HotelService {
         return hotelRepository.findHotelByCorporationId(corporationId);
     }
 
-//    public List<Hotel> getHotelsByStandard(Integer standard) {
-//        return hotelRepository.findByStandard(standard);
-//    }
+    public List<Hotel> getHotelsByStandard(Integer standard) {
+        return hotelRepository.findByStandard(standard);
+    }
 
     private List<Hotel> getHotelsByStandardAndCity(Integer standard, String city){
         return hotelRepository.findByStandardAndCity(standard, city);
@@ -73,7 +112,7 @@ public class HotelService {
                                                Integer numberOfBeds,
                                                RoomStandard roomStandard,
                                                Date start,
-                                               Date end){
+                                               Date end) {
         List<GetHotelResponse> searchResult = new ArrayList<>();
 
         if(hotelStandard != null){

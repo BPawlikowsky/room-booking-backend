@@ -1,7 +1,8 @@
-package pl.booking.bookmyroom.hotel.model;
+package pl.booking.bookmyroom.hotelservice.model.requests;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import pl.booking.bookmyroom.hotelservice.model.RoomStandard;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
