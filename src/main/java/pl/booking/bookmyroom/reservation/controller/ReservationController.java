@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pl.booking.bookmyroom.hotelservice.exceptions.FindHotelException;
 import pl.booking.bookmyroom.reservation.model.*;
 import pl.booking.bookmyroom.reservation.service.ReservationService;
 
@@ -57,7 +58,7 @@ public class ReservationController {
 
     @GetMapping(value = "/corporation")
     @ResponseStatus(code = HttpStatus.OK)
-    public List<Reservation> getReservationsByCorporationId(@RequestParam @Valid Integer corporationId){
+    public List<Reservation> getReservationsByCorporationId(@RequestParam @Valid Integer corporationId) throws FindHotelException {
         return service.getCorporationReservations(corporationId);
     }
 

@@ -2,6 +2,7 @@ package pl.booking.bookmyroom.reservation.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pl.booking.bookmyroom.hotelservice.exceptions.FindHotelException;
 import pl.booking.bookmyroom.hotelservice.service.HotelService;
 import pl.booking.bookmyroom.reservation.model.*;
 import pl.booking.bookmyroom.reservation.repository.ReservationRepository;
@@ -66,7 +67,7 @@ public class ReservationService {
         return repository.findAllByHotelsId(hotelsId);
     }
 
-    public List<Reservation> getCorporationReservations(Integer corporationId){
+    public List<Reservation> getCorporationReservations(Integer corporationId) throws FindHotelException {
         List<Reservation> reservations = new ArrayList<>();
         hotelService.getHotelsByCorporationId(corporationId)
                 .forEach(h -> reservations.addAll(getHotelReservation(h.getId())));

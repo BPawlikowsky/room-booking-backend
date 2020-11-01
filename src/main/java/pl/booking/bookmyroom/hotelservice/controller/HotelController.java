@@ -4,15 +4,10 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pl.booking.bookmyroom.hotelservice.exceptions.CreateHotelException;
-import pl.booking.bookmyroom.hotelservice.exceptions.DeleteHotelException;
+import pl.booking.bookmyroom.hotelservice.exceptions.*;
 import pl.booking.bookmyroom.hotelservice.model.*;
-import pl.booking.bookmyroom.hotelservice.model.requests.CreateHotelRequest;
-import pl.booking.bookmyroom.hotelservice.model.requests.DeleteHotelRequest;
-import pl.booking.bookmyroom.hotelservice.model.requests.EditHotelRequest;
-import pl.booking.bookmyroom.hotelservice.model.responses.CreateHotelResponse;
-import pl.booking.bookmyroom.hotelservice.model.responses.DeleteHotelResponse;
-import pl.booking.bookmyroom.hotelservice.model.responses.GetHotelResponse;
+import pl.booking.bookmyroom.hotelservice.model.requests.*;
+import pl.booking.bookmyroom.hotelservice.model.responses.*;
 import pl.booking.bookmyroom.hotelservice.service.HotelService;
 
 import javax.validation.Valid;
@@ -49,12 +44,12 @@ public class HotelController {
         if(response.getStatus().matches("Hotel with id (.*) deleted"))
             return new ResponseEntity<>(response, HttpStatus.OK);
         else
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
     @GetMapping
     @ResponseStatus(code = HttpStatus.FOUND)
-    public ResponseEntity<List<GetHotelResponse>> getAllHotels() {
+    public ResponseEntity<List<GetHotelResponse>> getAllHotels() throws FindHotelException {
         List<GetHotelResponse> responses = hotelService.getAllHotels();
         if(!responses.isEmpty())
             return new ResponseEntity<>(responses, HttpStatus.FOUND);
@@ -64,7 +59,7 @@ public class HotelController {
 
     @GetMapping("city/{city}")
     @ResponseStatus(code = HttpStatus.FOUND)
-    public ResponseEntity<List<Hotel>> findHotelByCity(@PathVariable String city) {
+    public ResponseEntity<List<Hotel>> findHotelByCity(@PathVariable String city) throws FindHotelException {
         List<Hotel> responses =  hotelService.getHotelsByCity(city);
         if(!responses.isEmpty())
             return new ResponseEntity<>(responses, HttpStatus.FOUND);
@@ -74,7 +69,7 @@ public class HotelController {
 
     @GetMapping("corporation-id/{corporationId}")
     @ResponseStatus(code = HttpStatus.FOUND)
-    public ResponseEntity<List<Hotel>> findHotelByCorporationId(@PathVariable Integer corporationId){
+    public ResponseEntity<List<Hotel>> findHotelByCorporationId(@PathVariable Integer corporationId) throws FindHotelException {
         List<Hotel> responses = hotelService.getHotelsByCorporationId(corporationId);
         if(!responses.isEmpty())
             return new ResponseEntity<>(responses, HttpStatus.FOUND);
@@ -91,7 +86,7 @@ public class HotelController {
                                                @RequestParam(required = false) Integer numberOfBeds,
                                                @RequestParam(required = false) RoomStandard roomStandard,
                                                @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date start,
-                                               @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date end){
+                                               @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date end) throws FindHotelException {
         List<GetHotelResponse> responses = hotelService.findHotelsMatchingQuery(
                 city, hotelStandard,
                 priceMin, priceMax,
@@ -106,7 +101,11 @@ public class HotelController {
 
     @PutMapping
     @ResponseStatus(code = HttpStatus.OK)
-    public void editHotel(@RequestBody EditHotelRequest request, @RequestParam Integer id) {
-        hotelService.editHotel(request, id);
+    public ResponseEntity<EditHotelResponse> editHotel(@RequestBody EditHotelRequest request, @RequestParam Integer id) throws EditHotelException {
+        EditHotelResponse response = hotelService.editHotel(request, id);
+        if(response.getStatus().equals("Hotel edited successfully"))
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        else
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 }

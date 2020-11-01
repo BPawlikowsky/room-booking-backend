@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.booking.bookmyroom.hotelservice.exceptions.CreateHotelException;
 import pl.booking.bookmyroom.hotelservice.exceptions.DeleteHotelException;
+import pl.booking.bookmyroom.hotelservice.exceptions.EditHotelException;
+import pl.booking.bookmyroom.hotelservice.exceptions.FindHotelException;
 import pl.booking.bookmyroom.hotelservice.model.responses.DeleteHotelResponse;
 import pl.booking.bookmyroom.hotelservice.model.*;
 import pl.booking.bookmyroom.hotelservice.model.requests.AddRoomsToHotelRequest;
@@ -12,6 +14,7 @@ import pl.booking.bookmyroom.hotelservice.model.requests.CreateHotelRequest;
 import pl.booking.bookmyroom.hotelservice.model.requests.DeleteHotelRequest;
 import pl.booking.bookmyroom.hotelservice.model.requests.EditHotelRequest;
 import pl.booking.bookmyroom.hotelservice.model.responses.CreateHotelResponse;
+import pl.booking.bookmyroom.hotelservice.model.responses.EditHotelResponse;
 import pl.booking.bookmyroom.hotelservice.model.responses.GetHotelResponse;
 import pl.booking.bookmyroom.hotelservice.repository.HotelRepository;
 
@@ -35,7 +38,19 @@ public class HotelService {
     public CreateHotelResponse createHotel(CreateHotelRequest request) throws CreateHotelException {
         Hotel hotel;
         String status;
-        if(hotelRepository.findByNameAndCity(request.getName(), request.getCity()).isEmpty()) {
+        if(request.getName().equals("") || request.getCity().equals("")) {
+            status = "No hotel or city name";
+            throw new CreateHotelException(status);
+        }
+        else if(request.getStreet().equals("") || request.getStreetNumber().equals("")) {
+            status = "No Street name or no street number";
+            throw new CreateHotelException(status);
+        }
+        else if(!hotelRepository.findByNameAndCity(request.getName(), request.getCity()).isEmpty()) {
+            status = "Hotel by the name " + request.getName() + " in " + request.getCity() + " city already exists.";
+            throw new CreateHotelException(status);
+        }
+        else {
             hotel = new Hotel();
             hotel.setName(request.getName());
             hotel.setCity(request.getCity());
@@ -51,16 +66,8 @@ public class HotelService {
                 roomService.addRoomsToHotel(r, hotel.getId());
             }
             status = "Hotel successfully created";
-            return new CreateHotelResponse(
-                    hotel.getCity(),
-                    hotel.getName(),
-                    hotel.getCorporationId(),
-                    status
-                    );
-        } else {
-            status = "Hotel by the name " + request.getName() + " in " + request.getCity() + " city already exists.";
-            throw new CreateHotelException(status);
         }
+        return new CreateHotelResponse(request, status);
     }
 
     public DeleteHotelResponse deleteHotel(DeleteHotelRequest request) throws DeleteHotelException {
@@ -78,31 +85,49 @@ public class HotelService {
         );
     }
 
-    public List<GetHotelResponse> getAllHotels() {
+    public List<GetHotelResponse> getAllHotels() throws FindHotelException {
         List<Hotel> hotels = hotelRepository.findAll();
         List<RoomType> roomTypes = roomService.getAllRoomTypes();
         List<GetHotelResponse> response = new ArrayList<>();
         for (Hotel h : hotels) {
-            List<RoomType> hotelRooms = roomTypes.stream().filter(r -> r.getHotelId().equals(h.getId())).collect(Collectors.toList());
+            List<RoomType> hotelRooms =
+                    roomTypes.stream()
+                            .filter(
+                                    r -> r.getHotelId().equals(h.getId())).collect(Collectors.toList()
+                    );
             response.add(new GetHotelResponse(h, hotelRooms));
         }
+        if(response.isEmpty())
+            throw new FindHotelException("No hotels found");
         return response;
     }
 
-    public List<Hotel> getHotelsByCity(String city){
-        return hotelRepository.findByCity(city);
+    public List<Hotel> getHotelsByCity(String city) throws FindHotelException {
+        List<Hotel> responses = hotelRepository.findByCity(city);
+        if(responses.isEmpty())
+            throw new FindHotelException("City not found");
+        return responses;
     }
 
-    public List<Hotel> getHotelsByCorporationId(Integer corporationId) {
-        return hotelRepository.findHotelByCorporationId(corporationId);
+    public List<Hotel> getHotelsByCorporationId(Integer corporationId) throws FindHotelException {
+        List<Hotel> responses = hotelRepository.findHotelByCorporationId(corporationId);
+        if(responses.isEmpty())
+            throw new FindHotelException("Corporation id " + corporationId + ": No hotels found");
+        return responses;
     }
 
-    public List<Hotel> getHotelsByStandard(Integer standard) {
-        return hotelRepository.findByStandard(standard);
+    public List<Hotel> getHotelsByStandard(Integer standard) throws FindHotelException {
+        List<Hotel> responses = hotelRepository.findByStandard(standard);
+        if(responses.isEmpty())
+            throw new FindHotelException("No hotels of standard " + standard + " found");
+        return responses;
     }
 
-    private List<Hotel> getHotelsByStandardAndCity(Integer standard, String city){
-        return hotelRepository.findByStandardAndCity(standard, city);
+    private List<Hotel> getHotelsByStandardAndCity(Integer standard, String city) throws FindHotelException {
+        List<Hotel> responses = hotelRepository.findByStandardAndCity(standard, city);
+        if(responses.isEmpty())
+            throw new FindHotelException("No hotels of standard " + standard + " found in " + city + " city");
+        return responses;
     }
 
     public List<GetHotelResponse> findHotelsMatchingQuery(String city,
@@ -112,7 +137,7 @@ public class HotelService {
                                                Integer numberOfBeds,
                                                RoomStandard roomStandard,
                                                Date start,
-                                               Date end) {
+                                               Date end) throws FindHotelException {
         List<GetHotelResponse> searchResult = new ArrayList<>();
 
         if(hotelStandard != null){
@@ -144,7 +169,8 @@ public class HotelService {
         return searchResult;
     }
 
-    public void editHotel(EditHotelRequest request, Integer id) {
+    public EditHotelResponse editHotel(EditHotelRequest request, Integer id) throws EditHotelException {
+        String status;
         Optional<Hotel> hotel = hotelRepository.findById(id);
         if(hotel.isPresent()) {
             Hotel hotelToEdit = hotel.get();
@@ -155,7 +181,12 @@ public class HotelService {
                 hotelToEdit.setStandard(request.getStandard());
             }
             hotelRepository.save(hotelToEdit);
+            status = "Hotel edited successfully";
+        } else {
+            status = "Hotel not found";
+            throw new EditHotelException(status);
         }
+        return new EditHotelResponse(request, status);
     }
 
     public Integer getNumberOfRoomsByRoomTypeId(Integer id) {
