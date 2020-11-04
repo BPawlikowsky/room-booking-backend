@@ -28,6 +28,10 @@ import pl.booking.bookmyroom.hotelservice.model.responses.GetHotelResponse;
 import pl.booking.bookmyroom.hotelservice.repository.HotelRepository;
 import pl.booking.bookmyroom.hotelservice.service.HotelService;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.ParsePosition;
+import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -194,11 +198,103 @@ class HotelControllerTest {
     }
 
     @Test
-    void findHotelByCorporationId() {
+    void findHotelByCorporationId_FOUND() throws FindHotelException {
+        Hotel hotel = new Hotel();
+        hotel.setId(1);
+        hotel.setCity("Gotham");
+        hotel.setName("Testing Hotel");
+        hotel.setStreet("Testing St.");
+        hotel.setStreetNumber("10");
+        hotel.setPhoneNumber("900800700");
+        hotel.setStandard(3);
+        hotel.setCorporationId(1);
+        GetHotelResponse response = new GetHotelResponse(
+                hotel, List.of(new RoomType(
+                1,
+                23.99f,
+                5,
+                RoomStandard.STANDARD,
+                5,
+                1))
+        );
+        ResponseEntity<List<Hotel>> expectedResponse = new ResponseEntity<>(List.of(hotel), HttpStatus.FOUND);
+        doReturn(List.of(hotel)).when(hotelService).getHotelsByCorporationId(hotel.getCorporationId());
+        ResponseEntity<List<Hotel>> actualResponse = hotelController.findHotelByCorporationId(hotel.getCorporationId());
+        assertEquals(expectedResponse, actualResponse);
     }
 
     @Test
-    void findHotelsBySearchQuery() {
+    void findHotelByCorporationId_NOT_FOUND() throws FindHotelException {
+        doThrow(FindHotelException.class).when(hotelService).getHotelsByCorporationId(1);
+        assertThrows(FindHotelException.class, () -> hotelController.findHotelByCorporationId(1));
+    }
+
+    @Test
+    void findHotelsBySearchQuery_FOUND() throws ParseException, FindHotelException {
+        Hotel hotel = new Hotel();
+        hotel.setId(1);
+        hotel.setCity("Gotham");
+        hotel.setName("Testing Hotel");
+        hotel.setStreet("Testing St.");
+        hotel.setStreetNumber("10");
+        hotel.setPhoneNumber("900800700");
+        hotel.setStandard(3);
+        hotel.setCorporationId(1);
+        GetHotelResponse response = new GetHotelResponse(
+                hotel, List.of(new RoomType(
+                1,
+                23.99f,
+                5,
+                RoomStandard.STANDARD,
+                5,
+                1))
+        );
+        ResponseEntity<List<GetHotelResponse>> expectedResponse = new ResponseEntity<>(List.of(response), HttpStatus.FOUND);
+        doReturn(List.of(response)).when(hotelService).findHotelsMatchingQuery(
+                hotel.getCity(),
+                hotel.getStandard(),
+                0.0f,
+                50.0f,
+                response.getHotelRoomTypes().get(0).getNumberOfBeds(),
+                response.getHotelRoomTypes().get(0).getStandard(),
+                DateFormat.getDateInstance().parse("01/01/00 0:00 AM, CET", new ParsePosition(0)),
+                DateFormat.getDateInstance().parse("31/12/20 12:59 PM, CET", new ParsePosition(0))
+        );
+        ResponseEntity<List<GetHotelResponse>> actualResponse = hotelController.findHotelsBySearchQuery(
+                hotel.getCity(),
+                hotel.getStandard(),
+                0.0f,
+                50.0f,
+                response.getHotelRoomTypes().get(0).getNumberOfBeds(),
+                response.getHotelRoomTypes().get(0).getStandard(),
+                DateFormat.getDateInstance().parse("01/01/00 0:00 AM, CET", new ParsePosition(0)),
+                DateFormat.getDateInstance().parse("31/12/20 12:59 PM, CET", new ParsePosition(0))
+        );
+        assertEquals(expectedResponse, actualResponse);
+    }
+
+    @Test
+    void findHotelsBySearchQuery_NOT_FOUND() throws FindHotelException {
+        doThrow(FindHotelException.class).when(hotelService).findHotelsMatchingQuery(
+                "Gotham",
+                3,
+                0.0f,
+                50.0f,
+                3,
+                RoomStandard.STANDARD,
+                DateFormat.getDateInstance().parse("01/01/00 0:00 AM, CET", new ParsePosition(0)),
+                DateFormat.getDateInstance().parse("31/12/20 12:59 PM, CET", new ParsePosition(0))
+        );
+        assertThrows(FindHotelException.class, () -> hotelController.findHotelsBySearchQuery(
+                "Gotham",
+                3,
+                0.0f,
+                50.0f,
+                3,
+                RoomStandard.STANDARD,
+                DateFormat.getDateInstance().parse("01/01/00 0:00 AM, CET", new ParsePosition(0)),
+                DateFormat.getDateInstance().parse("31/12/20 12:59 PM, CET", new ParsePosition(0))
+        ));
     }
 
     @Test

@@ -146,7 +146,7 @@ class HotelServiceTest {
     }
 
     @Test
-    void getAllHotels_FOUND() throws FindHotelException {
+    void getAllHotels_Found() throws FindHotelException {
         hotelRepository.save(hotel);
         roomType.setHotelId(hotel.getId());
         roomRepository.save(roomType);
@@ -169,16 +169,36 @@ class HotelServiceTest {
     }
 
     @Test
-    public void getAllHotels_NOT_FOUND() {
+    public void getAllHotels_Not_found() {
         assertThrows(FindHotelException.class, () -> hotelService.getAllHotels());
     }
 
     @Test
-    void getHotelsByCity() {
+    void getHotelsByCity_Found() throws FindHotelException {
+        hotelRepository.save(hotel);
+        List<Hotel> expectedResponse = List.of(hotel);
+        List<Hotel> actualResponse = hotelService.getHotelsByCity(hotel.getCity());
+        assertEquals(expectedResponse.get(0), actualResponse.get(0));
+        hotelRepository.deleteAll();
     }
 
     @Test
-    void getHotelsByCorporationId() {
+    void getHotelsByCity_Not_found() {
+        assertThrows(FindHotelException.class, () -> hotelService.getHotelsByCity("Test city"));
+    }
+
+    @Test
+    void getHotelsByCorporationId_Found() throws FindHotelException {
+        hotelRepository.save(hotel);
+        List<Hotel> expectedResponse = List.of(hotel);
+        List<Hotel> actualResponse = hotelService.getHotelsByCorporationId(hotel.getCorporationId());
+        assertEquals(expectedResponse.get(0), actualResponse.get(0));
+        hotelRepository.deleteAll();
+    }
+
+    @Test
+    void getHotelsByCorporationId_Not_found() {
+        assertThrows(FindHotelException.class, () -> hotelService.getHotelsByCorporationId(1));
     }
 
     @Test
