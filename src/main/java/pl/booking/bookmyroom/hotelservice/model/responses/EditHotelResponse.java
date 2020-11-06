@@ -7,9 +7,9 @@ import pl.booking.bookmyroom.hotelservice.model.requests.EditHotelRequest;
 @Getter
 @AllArgsConstructor
 public class EditHotelResponse {
-    private String phoneNumber;
-    private Integer standard;
-    private String status;
+    private final String phoneNumber;
+    private final Integer standard;
+    private final String status;
 
     public EditHotelResponse(EditHotelRequest request, String status) {
         this.phoneNumber = request.getPhoneNumber();

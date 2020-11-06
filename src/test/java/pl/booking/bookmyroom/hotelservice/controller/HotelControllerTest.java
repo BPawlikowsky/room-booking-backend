@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import pl.booking.bookmyroom.hotelservice.exceptions.CreateHotelException;
 import pl.booking.bookmyroom.hotelservice.exceptions.DeleteHotelException;
+import pl.booking.bookmyroom.hotelservice.exceptions.EditHotelException;
 import pl.booking.bookmyroom.hotelservice.exceptions.FindHotelException;
 import pl.booking.bookmyroom.hotelservice.model.Hotel;
 import pl.booking.bookmyroom.hotelservice.model.RoomStandard;
@@ -22,8 +23,10 @@ import pl.booking.bookmyroom.hotelservice.model.RoomType;
 import pl.booking.bookmyroom.hotelservice.model.requests.AddRoomsToHotelRequest;
 import pl.booking.bookmyroom.hotelservice.model.requests.CreateHotelRequest;
 import pl.booking.bookmyroom.hotelservice.model.requests.DeleteHotelRequest;
+import pl.booking.bookmyroom.hotelservice.model.requests.EditHotelRequest;
 import pl.booking.bookmyroom.hotelservice.model.responses.CreateHotelResponse;
 import pl.booking.bookmyroom.hotelservice.model.responses.DeleteHotelResponse;
+import pl.booking.bookmyroom.hotelservice.model.responses.EditHotelResponse;
 import pl.booking.bookmyroom.hotelservice.model.responses.GetHotelResponse;
 import pl.booking.bookmyroom.hotelservice.repository.HotelRepository;
 import pl.booking.bookmyroom.hotelservice.service.HotelService;
@@ -298,6 +301,29 @@ class HotelControllerTest {
     }
 
     @Test
-    void editHotel() {
+    void editHotel_OK() throws EditHotelException {
+        EditHotelRequest request = new EditHotelRequest(
+                "900800700",
+                3
+        );
+        EditHotelResponse response = new EditHotelResponse(
+                "900800700",
+                3,
+                "Hotel edited successfully"
+        );
+        ResponseEntity<EditHotelResponse> expectedResponse = new ResponseEntity<>(response, HttpStatus.OK);
+        doReturn(response).when(hotelService).editHotel(request, 1);
+        ResponseEntity<EditHotelResponse> actualResponse = hotelController.editHotel(request, 1);
+        assertEquals(expectedResponse, actualResponse);
+    }
+
+    @Test
+    void editHotel_NOT_FOUND() throws EditHotelException {
+        EditHotelRequest request = new EditHotelRequest(
+                "900800700",
+                3
+        );
+        doThrow(EditHotelException.class).when(hotelService).editHotel(request, 1);
+        assertThrows(EditHotelException.class, () -> hotelController.editHotel(request, 1));
     }
 }
