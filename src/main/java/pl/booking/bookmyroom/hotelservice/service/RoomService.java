@@ -6,7 +6,7 @@ import pl.booking.bookmyroom.hotelservice.model.requests.AddRoomsToHotelRequest;
 import pl.booking.bookmyroom.hotelservice.model.RoomStandard;
 import pl.booking.bookmyroom.hotelservice.model.RoomType;
 import pl.booking.bookmyroom.hotelservice.repository.RoomRepository;
-import pl.booking.bookmyroom.reservation.service.ReservationService;
+import pl.booking.bookmyroom.reservationservice.service.ReservationService;
 
 import java.util.Date;
 import java.util.List;

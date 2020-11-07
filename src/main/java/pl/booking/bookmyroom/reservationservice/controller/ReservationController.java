@@ -1,18 +1,20 @@
-package pl.booking.bookmyroom.reservation.controller;
+package pl.booking.bookmyroom.reservationservice.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.booking.bookmyroom.hotelservice.exceptions.FindHotelException;
-import pl.booking.bookmyroom.reservation.model.*;
-import pl.booking.bookmyroom.reservation.service.ReservationService;
+import pl.booking.bookmyroom.reservationservice.model.*;
+import pl.booking.bookmyroom.reservationservice.model.requests.ChangeStatusRequest;
+import pl.booking.bookmyroom.reservationservice.model.requests.EditReservationRequest;
+import pl.booking.bookmyroom.reservationservice.model.requests.MakeReservationRequest;
+import pl.booking.bookmyroom.reservationservice.service.ReservationService;
 
 import javax.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/reservation")
+@RequestMapping("api/reservations")
 @CrossOrigin
 public class ReservationController {
     private final ReservationService service;
@@ -50,19 +52,20 @@ public class ReservationController {
         return service.getUserReservations(userId);
     }
 
-    @GetMapping(value = "/hotel")
+    @GetMapping(value = "/{hotel}")
     @ResponseStatus(code = HttpStatus.OK)
     public List<Reservation> getReservationsByHotelsId(@RequestParam @Valid Integer hotelsId){
         return service.getHotelReservation(hotelsId);
     }
 
-    @GetMapping(value = "/corporation")
+    @GetMapping(value = "/{corporationId}")
     @ResponseStatus(code = HttpStatus.OK)
     public List<Reservation> getReservationsByCorporationId(@RequestParam @Valid Integer corporationId) throws FindHotelException {
         return service.getCorporationReservations(corporationId);
     }
 
-    @PatchMapping(value = "/status")
+    @PatchMapping
+    @ResponseStatus(code = HttpStatus.OK)
     public ResponseEntity<String> changeReservationStatus(@RequestBody @Valid ChangeStatusRequest request){
         if(service.changeReservationStatus(request)){
             return new ResponseEntity<>(HttpStatus.OK);

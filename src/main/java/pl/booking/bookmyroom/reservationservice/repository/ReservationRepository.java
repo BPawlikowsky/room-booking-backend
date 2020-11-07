@@ -1,9 +1,9 @@
-package pl.booking.bookmyroom.reservation.repository;
+package pl.booking.bookmyroom.reservationservice.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-import pl.booking.bookmyroom.reservation.model.Reservation;
+import pl.booking.bookmyroom.reservationservice.model.Reservation;
 
 import java.util.List;
 

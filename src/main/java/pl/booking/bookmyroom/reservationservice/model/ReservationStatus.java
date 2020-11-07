@@ -1,4 +1,4 @@
-package pl.booking.bookmyroom.reservation.model;
+package pl.booking.bookmyroom.reservationservice.model;
 
 public enum ReservationStatus {
     PENDING,

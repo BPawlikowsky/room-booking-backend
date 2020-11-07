@@ -1,11 +1,14 @@
-package pl.booking.bookmyroom.reservation.service;
+package pl.booking.bookmyroom.reservationservice.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.booking.bookmyroom.hotelservice.exceptions.FindHotelException;
 import pl.booking.bookmyroom.hotelservice.service.HotelService;
-import pl.booking.bookmyroom.reservation.model.*;
-import pl.booking.bookmyroom.reservation.repository.ReservationRepository;
+import pl.booking.bookmyroom.reservationservice.model.*;
+import pl.booking.bookmyroom.reservationservice.model.requests.ChangeStatusRequest;
+import pl.booking.bookmyroom.reservationservice.model.requests.EditReservationRequest;
+import pl.booking.bookmyroom.reservationservice.model.requests.MakeReservationRequest;
+import pl.booking.bookmyroom.reservationservice.repository.ReservationRepository;
 
 import java.util.ArrayList;
 import java.util.Date;
