@@ -50,19 +50,19 @@ class RoomService {
         return roomRepository.findById(id).get().getNumberOfRooms();
     }
 
-    boolean anyRoomsMatchQuery(Integer hotelsId,
+    List<RoomType> anyRoomsMatchQuery(Integer hotelsId,
                                Optional<Integer> numOfBeds,
                                Optional<RoomStandard> standard,
                                Optional<Float> priceMin,
                                Optional<Float> priceMax,
                                Optional<Date> start,
                                Optional<Date> end){
-        List<RoomType> hotelRooms = roomRepository.findByHotelsId(hotelsId);
+        List<RoomType> hotelRooms = hotelsId != null ? roomRepository.findByHotelsId(hotelsId) : roomRepository.findAll();
         hotelRooms = numOfBeds.isPresent() ? getRoomsMatchingNumberOfBeds(hotelRooms, numOfBeds.get()) : hotelRooms;
         hotelRooms = standard.isPresent() ? getRoomsMatchingStandard(hotelRooms, standard.get()) : hotelRooms;
         hotelRooms = priceMin.isPresent() && priceMax.isPresent() ? getRoomsMatchingPriceRange(hotelRooms, priceMin.get(), priceMax.get()) : hotelRooms;
         hotelRooms = start.isPresent() && end.isPresent() ? getRoomsMatchingDateRange(hotelRooms, start.get(), end.get()) : hotelRooms;
-        return !hotelRooms.isEmpty();
+        return hotelRooms;
     }
 
     private List<RoomType> getRoomsMatchingNumberOfBeds(List<RoomType> hotelRooms, Integer numberOfBeds){

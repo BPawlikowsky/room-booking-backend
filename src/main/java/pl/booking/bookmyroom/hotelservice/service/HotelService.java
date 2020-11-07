@@ -137,36 +137,66 @@ public class HotelService {
                                                Integer numberOfBeds,
                                                RoomStandard roomStandard,
                                                Date start,
-                                               Date end) throws FindHotelException {
+                                               Date end
+    ) throws FindHotelException {
         List<GetHotelResponse> searchResult = new ArrayList<>();
-
-        if(hotelStandard != null){
+        if(city != null && hotelStandard != null) {
             for (Hotel h : getHotelsByStandardAndCity(hotelStandard, city)){
                 GetHotelResponse r = new GetHotelResponse();
                 r.setHotel(h);
                 searchResult.add(r);
             }
-        } else {
-            for (Hotel h : getHotelsByCity(city)){
+        }
+        else if(hotelStandard != null){
+            for (Hotel h : getHotelsByStandard(hotelStandard)){
                 GetHotelResponse r = new GetHotelResponse();
                 r.setHotel(h);
                 searchResult.add(r);
             }
+        }  else {
+            List<RoomType> rooms = roomService.anyRoomsMatchQuery(
+                    null,
+                    numberOfBeds != null ? Optional.of(numberOfBeds) : Optional.empty(),
+                    roomStandard != null ? Optional.of(roomStandard) : Optional.empty(),
+                    priceMin != null ? Optional.of(priceMin) : Optional.empty(),
+                    priceMax != null ? Optional.of(priceMax) : Optional.empty(),
+                    start != null ? Optional.of(start) : Optional.empty(),
+                    end != null ? Optional.of(end) : Optional.empty()
+            );
+
+            if(!rooms.isEmpty()) {
+                Hotel hotelByRoom = new Hotel();
+                hotelRepository.findById(rooms.get(0).getHotelId()).ifPresent(
+                        hotel -> {
+                            hotelByRoom.setCorporationId(hotel.getCorporationId());
+                        }
+                );
+                for (Hotel h : getHotelsByCorporationId(hotelByRoom.getCorporationId())) {
+                    GetHotelResponse r = new GetHotelResponse();
+                    r.setHotel(h);
+                    searchResult.add(r);
+                }
+            }
         }
 
         searchResult = searchResult.stream()
-                .filter(r -> roomService.anyRoomsMatchQuery(r.getHotel().getId(),
+                .filter(r -> !roomService.anyRoomsMatchQuery(
+                        r.getHotel().getId(),
                         Optional.ofNullable(numberOfBeds),
                         Optional.ofNullable(roomStandard),
                         Optional.ofNullable(priceMin),
                         Optional.ofNullable(priceMax),
                         Optional.ofNullable(start),
-                        Optional.ofNullable(end)))
+                        Optional.ofNullable(end)
+                ).isEmpty())
                 .collect(Collectors.toList());
 
         searchResult.forEach(r -> r.setHotelRoomTypes(roomService.getRoomTypesByHotelsId(r.getHotel().getId())));
 
-        return searchResult;
+        if(searchResult.size() > 0)
+            return searchResult;
+        else
+            throw new FindHotelException("Query didn't find hotels with given parameters");
     }
 
     public EditHotelResponse editHotel(EditHotelRequest request, Integer id) throws EditHotelException {

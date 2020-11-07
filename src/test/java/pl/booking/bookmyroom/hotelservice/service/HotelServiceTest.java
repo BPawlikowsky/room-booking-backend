@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import pl.booking.bookmyroom.hotelservice.exceptions.CreateHotelException;
 import pl.booking.bookmyroom.hotelservice.exceptions.DeleteHotelException;
+import pl.booking.bookmyroom.hotelservice.exceptions.EditHotelException;
 import pl.booking.bookmyroom.hotelservice.exceptions.FindHotelException;
 import pl.booking.bookmyroom.hotelservice.model.Hotel;
 import pl.booking.bookmyroom.hotelservice.model.RoomStandard;
@@ -17,12 +18,18 @@ import pl.booking.bookmyroom.hotelservice.model.RoomType;
 import pl.booking.bookmyroom.hotelservice.model.requests.AddRoomsToHotelRequest;
 import pl.booking.bookmyroom.hotelservice.model.requests.CreateHotelRequest;
 import pl.booking.bookmyroom.hotelservice.model.requests.DeleteHotelRequest;
+import pl.booking.bookmyroom.hotelservice.model.requests.EditHotelRequest;
 import pl.booking.bookmyroom.hotelservice.model.responses.CreateHotelResponse;
 import pl.booking.bookmyroom.hotelservice.model.responses.DeleteHotelResponse;
+import pl.booking.bookmyroom.hotelservice.model.responses.EditHotelResponse;
 import pl.booking.bookmyroom.hotelservice.model.responses.GetHotelResponse;
 import pl.booking.bookmyroom.hotelservice.repository.HotelRepository;
 import pl.booking.bookmyroom.hotelservice.repository.RoomRepository;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -52,10 +59,17 @@ class HotelServiceTest {
         hotel.setCorporationId(1);
 
         roomType = new RoomType();
+        roomType.setHotelId(hotel.getId());
         roomType.setNumberOfBeds(2);
         roomType.setNumberOfRooms(4);
         roomType.setPrice(23.99f);
         roomType.setStandard(RoomStandard.STANDARD);
+    }
+    
+    @AfterEach
+    public void Cleanup() {
+        hotelRepository.delete(hotel);
+        roomRepository.delete(roomType);
     }
 
     @Test
@@ -134,7 +148,6 @@ class HotelServiceTest {
         assertEquals(expectedResponse.getId(), actualResponse.getId());
         assertEquals(expectedResponse.getStatus(), actualResponse.getStatus());
         assertEquals(expectedResponse.getClass(), actualResponse.getClass());
-        hotelRepository.delete(hotel);
     }
 
     @Test
@@ -152,7 +165,7 @@ class HotelServiceTest {
         roomRepository.save(roomType);
         List<GetHotelResponse> expectedResponse = List.of(
                 new GetHotelResponse(hotel, List.of(new RoomType(
-                    1,
+                        roomType.getId(),
                     roomType.getPrice(),
                     roomType.getNumberOfBeds(),
                     roomType.getStandard(),
@@ -165,6 +178,7 @@ class HotelServiceTest {
         assertEquals(expectedResponse.get(0).getHotel(), actualResponse.get(0).getHotel());
         assertEquals(expectedResponse.get(0).getHotelRoomTypes().get(0), actualResponse.get(0).getHotelRoomTypes().get(0));
         roomRepository.delete(roomType);
+        hotel.setId(hotelRepository.findAll().get(0).getId());
         hotelRepository.delete(hotel);
     }
 
@@ -179,7 +193,8 @@ class HotelServiceTest {
         List<Hotel> expectedResponse = List.of(hotel);
         List<Hotel> actualResponse = hotelService.getHotelsByCity(hotel.getCity());
         assertEquals(expectedResponse.get(0), actualResponse.get(0));
-        hotelRepository.deleteAll();
+        hotel.setId(hotelRepository.findAll().get(0).getId());
+        hotelRepository.delete(hotel);
     }
 
     @Test
@@ -193,7 +208,8 @@ class HotelServiceTest {
         List<Hotel> expectedResponse = List.of(hotel);
         List<Hotel> actualResponse = hotelService.getHotelsByCorporationId(hotel.getCorporationId());
         assertEquals(expectedResponse.get(0), actualResponse.get(0));
-        hotelRepository.deleteAll();
+        hotel.setId(hotelRepository.findAll().get(0).getId());
+        hotelRepository.delete(hotel);
     }
 
     @Test
@@ -202,22 +218,296 @@ class HotelServiceTest {
     }
 
     @Test
-    void getHotelsByStandard() {
+    void getHotelsByStandard_Found() throws FindHotelException {
+        hotelRepository.save(hotel);
+        List<Hotel> expectedResponse = List.of(hotel);
+        List<Hotel> actualResponse = hotelService.getHotelsByStandard(hotel.getStandard());
+        assertEquals(expectedResponse.get(0), actualResponse.get(0));
+        hotel.setId(hotelRepository.findAll().get(0).getId());
+        hotelRepository.delete(hotel);
     }
 
     @Test
-    void findHotelsMatchingQuery() {
+    void getHotelsByStandard_Not_Found() {
+        assertThrows(FindHotelException.class, () -> hotelService.getHotelsByStandard(3));
     }
 
     @Test
-    void editHotel() {
+    void findHotelsMatchingQuery_Found_All() throws FindHotelException {
+        hotelRepository.save(hotel);
+        roomType.setHotelId(hotel.getId());
+        roomRepository.save(roomType);
+        List<GetHotelResponse> expectedResponse = List.of(new GetHotelResponse(
+                hotel,
+                List.of(roomType)
+        ));
+        List<GetHotelResponse> actualResponse = hotelService.findHotelsMatchingQuery(
+                hotel.getCity(),
+                hotel.getStandard(),
+                0.0f,
+                99.9f,
+                roomType.getNumberOfBeds(),
+                RoomStandard.STANDARD,
+                DateFormat.getDateInstance().parse("01/01/00 0:00 AM, CET", new ParsePosition(0)),
+                DateFormat.getDateInstance().parse("31/12/20 12:59 PM, CET", new ParsePosition(0))
+        );
+        
+        assertEquals(expectedResponse.get(0).getHotel(), actualResponse.get(0).getHotel());
+        assertEquals(expectedResponse.get(0).getHotelRoomTypes(), actualResponse.get(0).getHotelRoomTypes());
     }
 
     @Test
-    void getNumberOfRoomsByRoomTypeId() {
+    void findHotelsMatchingQuery_Found_Name() throws FindHotelException {
+        hotelRepository.save(hotel);
+        roomType.setHotelId(hotel.getId());
+        roomRepository.save(roomType);
+        List<GetHotelResponse> expectedResponse = List.of(new GetHotelResponse(
+                hotel,
+                List.of(roomType)
+        ));
+        List<GetHotelResponse> actualResponse = hotelService.findHotelsMatchingQuery(
+                hotel.getCity(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+        
+        assertEquals(expectedResponse.get(0).getHotel(), actualResponse.get(0).getHotel());
+        assertEquals(expectedResponse.get(0).getHotelRoomTypes(), actualResponse.get(0).getHotelRoomTypes());
     }
 
     @Test
-    void getRoomPriceByRoomTypeId() {
+    void findHotelsMatchingQuery_Found_HotelStandard() throws FindHotelException {
+        hotelRepository.save(hotel);
+        roomType.setHotelId(hotel.getId());
+        roomRepository.save(roomType);
+        List<GetHotelResponse> expectedResponse = List.of(new GetHotelResponse(
+                hotel,
+                List.of(roomType)
+        ));
+        List<GetHotelResponse> actualResponse = hotelService.findHotelsMatchingQuery(
+                null,
+                3,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+        
+        assertEquals(expectedResponse.get(0).getHotel(), actualResponse.get(0).getHotel());
+        assertEquals(expectedResponse.get(0).getHotelRoomTypes(), actualResponse.get(0).getHotelRoomTypes());
+    }
+
+    @Test
+    void findHotelsMatchingQuery_Found_Price() throws FindHotelException {
+        hotelRepository.save(hotel);
+        roomType.setHotelId(hotel.getId());
+        roomRepository.save(roomType);
+        List<GetHotelResponse> expectedResponse = List.of(new GetHotelResponse(
+                hotel,
+                List.of(roomType)
+        ));
+        List<GetHotelResponse> actualResponse = hotelService.findHotelsMatchingQuery(
+                null,
+                null,
+                0.0f,
+                99.9f,
+                null,
+                null,
+                null,
+                null
+        );
+        
+        assertEquals(expectedResponse.get(0).getHotel(), actualResponse.get(0).getHotel());
+        assertEquals(expectedResponse.get(0).getHotelRoomTypes(), actualResponse.get(0).getHotelRoomTypes());
+    }
+
+    @Test
+    void findHotelsMatchingQuery_Found_NumberOfBeds() throws FindHotelException {
+        hotelRepository.save(hotel);
+        roomType.setHotelId(hotel.getId());
+        roomRepository.save(roomType);
+        List<GetHotelResponse> expectedResponse = List.of(new GetHotelResponse(
+                hotel,
+                List.of(roomType)
+        ));
+        List<GetHotelResponse> actualResponse = hotelService.findHotelsMatchingQuery(
+                null,
+                null,
+                null,
+                null,
+                2,
+                null,
+                null,
+                null
+        );
+        hotelRepository.delete(hotel);
+        roomRepository.delete(roomType);
+        assertEquals(expectedResponse.get(0).getHotel(), actualResponse.get(0).getHotel());
+        assertEquals(expectedResponse.get(0).getHotelRoomTypes(), actualResponse.get(0).getHotelRoomTypes());
+    }
+
+    @Test
+    void findHotelsMatchingQuery_Found_RoomStandard() throws FindHotelException {
+        hotelRepository.save(hotel);
+        roomType.setHotelId(hotel.getId());
+        roomRepository.save(roomType);
+        List<GetHotelResponse> expectedResponse = List.of(new GetHotelResponse(
+                hotel,
+                List.of(roomType)
+        ));
+        List<GetHotelResponse> actualResponse = hotelService.findHotelsMatchingQuery(
+                null,
+                null,
+                null,
+                null,
+                null,
+                RoomStandard.STANDARD,
+                null,
+                null
+        );
+        
+        assertEquals(expectedResponse.get(0).getHotel(), actualResponse.get(0).getHotel());
+        assertEquals(expectedResponse.get(0).getHotelRoomTypes(), actualResponse.get(0).getHotelRoomTypes());
+    }
+
+    @Test
+    void findHotelsMatchingQuery_Found_Date() throws FindHotelException, ParseException {
+        hotelRepository.save(hotel);
+        roomType.setHotelId(hotel.getId());
+        roomRepository.save(roomType);
+        List<GetHotelResponse> expectedResponse = List.of(new GetHotelResponse(
+                hotel,
+                List.of(roomType)
+        ));
+        List<GetHotelResponse> actualResponse = hotelService.findHotelsMatchingQuery(
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                new SimpleDateFormat("dd/MM/yyyy").parse("01/01/1900"),
+                new SimpleDateFormat("dd/MM/yyyy").parse("31/12/2020")
+        );
+        
+        assertEquals(expectedResponse.get(0).getHotel(), actualResponse.get(0).getHotel());
+        assertEquals(expectedResponse.get(0).getHotelRoomTypes(), actualResponse.get(0).getHotelRoomTypes());
+    }
+
+    @Test
+    void findHotelsMatchingQuery_Not_Found_City() {
+        hotelRepository.save(hotel);
+        roomType.setHotelId(hotel.getId());
+        roomRepository.save(roomType);
+        assertThrows(FindHotelException.class, () -> hotelService.findHotelsMatchingQuery(
+                "New York",
+                hotel.getStandard(),
+                0.0f,
+                99.9f,
+                roomType.getNumberOfBeds(),
+                RoomStandard.STANDARD,
+                DateFormat.getDateInstance().parse("01/01/00 0:00 AM, CET", new ParsePosition(0)),
+                DateFormat.getDateInstance().parse("31/12/20 12:59 PM, CET", new ParsePosition(0))
+        ));
+    }
+
+    @Test
+    void findHotelsMatchingQuery_Not_Found_HotelStandard() {
+        hotelRepository.save(hotel);
+        roomType.setHotelId(hotel.getId());
+        roomRepository.save(roomType);
+        assertThrows(FindHotelException.class, () -> hotelService.findHotelsMatchingQuery(
+                hotel.getCity(),
+                5,
+                0.0f,
+                99.9f,
+                roomType.getNumberOfBeds(),
+                RoomStandard.STANDARD,
+                DateFormat.getDateInstance().parse("01/01/00 0:00 AM, CET", new ParsePosition(0)),
+                DateFormat.getDateInstance().parse("31/12/20 12:59 PM, CET", new ParsePosition(0))
+        ));
+    }
+
+    @Test
+    void findHotelsMatchingQuery_Not_Found_Prices() {
+        hotelRepository.save(hotel);
+        roomType.setHotelId(hotel.getId());
+        roomRepository.save(roomType);
+        assertThrows(FindHotelException.class, () -> hotelService.findHotelsMatchingQuery(
+                hotel.getCity(),
+                3,
+                50.0f,
+                99.9f,
+                roomType.getNumberOfBeds(),
+                RoomStandard.STANDARD,
+                DateFormat.getDateInstance().parse("01/01/00 0:00 AM, CET", new ParsePosition(0)),
+                DateFormat.getDateInstance().parse("31/12/20 12:59 PM, CET", new ParsePosition(0))
+        ));
+    }
+
+    @Test
+    void findHotelsMatchingQuery_Not_Found_NumberOfBeds() {
+        hotelRepository.save(hotel);
+        roomType.setHotelId(hotel.getId());
+        roomRepository.save(roomType);
+        assertThrows(FindHotelException.class, () -> hotelService.findHotelsMatchingQuery(
+                hotel.getCity(),
+                3,
+                0.0f,
+                99.9f,
+                4,
+                RoomStandard.STANDARD,
+                DateFormat.getDateInstance().parse("01/01/00 0:00 AM, CET", new ParsePosition(0)),
+                DateFormat.getDateInstance().parse("31/12/20 12:59 PM, CET", new ParsePosition(0))
+        ));
+    }
+
+    @Test
+    void findHotelsMatchingQuery_Not_Found_RoomStandard() {
+        hotelRepository.save(hotel);
+        roomType.setHotelId(hotel.getId());
+        roomRepository.save(roomType);
+        assertThrows(FindHotelException.class, () -> hotelService.findHotelsMatchingQuery(
+                hotel.getCity(),
+                3,
+                0.0f,
+                99.9f,
+                4,
+                RoomStandard.VIP,
+                DateFormat.getDateInstance().parse("01/01/00 0:00 AM, CET", new ParsePosition(0)),
+                DateFormat.getDateInstance().parse("31/12/20 12:59 PM, CET", new ParsePosition(0))
+        ));
+    }
+
+    @Test
+    void editHotel_Ok() throws EditHotelException {
+        hotelRepository.save(hotel);
+        roomType.setHotelId(hotel.getId());
+        roomRepository.save(roomType);
+        EditHotelRequest request = new EditHotelRequest(
+                "900800700",
+                3
+        );
+        EditHotelResponse expectedResponse = new EditHotelResponse(request, "Hotel edited successfully");
+        EditHotelResponse actualResponse = hotelService.editHotel(request, hotel.getId());
+        assertEquals(expectedResponse.getPhoneNumber(), actualResponse.getPhoneNumber());
+        assertEquals(expectedResponse.getStandard(), actualResponse.getStandard());
+        assertEquals(expectedResponse.getStatus(), actualResponse.getStatus());
+    }
+
+    @Test
+    void editHotel_Not_Found() throws EditHotelException {
+        EditHotelRequest request = new EditHotelRequest(
+                "900800700",
+                3
+        );
+        assertThrows(EditHotelException.class, () -> hotelService.editHotel(request, 1));
     }
 }
