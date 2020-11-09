@@ -34,7 +34,6 @@ import pl.booking.bookmyroom.hotelservice.service.HotelService;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.ParsePosition;
-import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;

@@ -233,7 +233,7 @@ class HotelServiceTest {
     }
 
     @Test
-    void findHotelsMatchingQuery_Found_All() throws FindHotelException {
+    void findHotelsMatchingQuery_Found_All() throws FindHotelException, ParseException {
         hotelRepository.save(hotel);
         roomType.setHotelId(hotel.getId());
         roomRepository.save(roomType);
@@ -248,8 +248,8 @@ class HotelServiceTest {
                 99.9f,
                 roomType.getNumberOfBeds(),
                 RoomStandard.STANDARD,
-                DateFormat.getDateInstance().parse("01/01/00 0:00 AM, CET", new ParsePosition(0)),
-                DateFormat.getDateInstance().parse("31/12/20 12:59 PM, CET", new ParsePosition(0))
+                new SimpleDateFormat("dd/MM/yyyy").parse("01/01/1900"),
+                new SimpleDateFormat("dd/MM/yyyy").parse("31/12/2020")
         );
         
         assertEquals(expectedResponse.get(0).getHotel(), actualResponse.get(0).getHotel());

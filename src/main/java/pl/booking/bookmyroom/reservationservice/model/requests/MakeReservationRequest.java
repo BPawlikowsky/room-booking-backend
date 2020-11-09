@@ -1,5 +1,6 @@
 package pl.booking.bookmyroom.reservationservice.model.requests;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -8,6 +9,7 @@ import java.util.Date;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class MakeReservationRequest {
     @NotNull
     private Date startDate;

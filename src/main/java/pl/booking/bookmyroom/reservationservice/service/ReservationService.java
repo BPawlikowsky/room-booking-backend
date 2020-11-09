@@ -1,13 +1,20 @@
 package pl.booking.bookmyroom.reservationservice.service;
 
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.booking.bookmyroom.hotelservice.exceptions.FindHotelException;
 import pl.booking.bookmyroom.hotelservice.service.HotelService;
+import pl.booking.bookmyroom.reservationservice.exceptions.DeleteReservationException;
+import pl.booking.bookmyroom.reservationservice.exceptions.EditReservationException;
+import pl.booking.bookmyroom.reservationservice.exceptions.MakeReservationException;
 import pl.booking.bookmyroom.reservationservice.model.*;
 import pl.booking.bookmyroom.reservationservice.model.requests.ChangeStatusRequest;
 import pl.booking.bookmyroom.reservationservice.model.requests.EditReservationRequest;
 import pl.booking.bookmyroom.reservationservice.model.requests.MakeReservationRequest;
+import pl.booking.bookmyroom.reservationservice.model.responses.DeleteReservationResponse;
+import pl.booking.bookmyroom.reservationservice.model.responses.EditReservationResponse;
+import pl.booking.bookmyroom.reservationservice.model.responses.MakeReservationResponse;
 import pl.booking.bookmyroom.reservationservice.repository.ReservationRepository;
 
 import java.util.ArrayList;
@@ -16,10 +23,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+@NoArgsConstructor
 @Service
 public class ReservationService {
-    private final ReservationRepository repository;
-    private final HotelService hotelService;
+    private ReservationRepository repository;
+    private HotelService hotelService;
 
     @Autowired
     public ReservationService(ReservationRepository repository, HotelService hotelService) {
@@ -27,7 +35,8 @@ public class ReservationService {
         this.hotelService = hotelService;
     }
 
-    public boolean makeReservation(MakeReservationRequest request) {
+    public MakeReservationResponse makeReservation(MakeReservationRequest request) throws MakeReservationException {
+        String status;
         if (hotelHasFreeRooms(request.getStartDate(), request.getEndDate(), request.getIdRoom())) {
             Reservation reservation = new Reservation();
             reservation.setReservationStart(request.getStartDate());
@@ -38,10 +47,12 @@ public class ReservationService {
             reservation.setFullReservationPrice(hotelService.getRoomPriceByRoomTypeId(request.getIdRoom())*calcNumOfDays(request.getStartDate(), request.getEndDate()));
             reservation.setStatus(ReservationStatus.PENDING);
             repository.save(reservation);
-            return true;
+            status = "Reservation successful";
         } else {
-            return false;
+            status = "Could not make reservation";
+            throw new MakeReservationException(status);
         }
+        return new MakeReservationResponse(request, status);
     }
 
     public boolean hotelHasFreeRooms(Date startDate, Date endDate, Integer roomId){
@@ -52,14 +63,17 @@ public class ReservationService {
         return numOfReservations <= numOfRoomsInHotel;
     }
 
-    public boolean deleteReservation(Integer reservationId) {
+    public DeleteReservationResponse deleteReservation(Integer reservationId) throws DeleteReservationException {
+        String status;
         Optional<Reservation> reservation = repository.findById(reservationId);
-        if(reservation.isPresent()){
+        if(reservation.isPresent()) {
             repository.delete(reservation.get());
-            return true;
+            status = "Reservation successfully deleted";
         } else {
-            return false;
+            status = "Could not find reservation with id " + reservationId;
+            throw new DeleteReservationException(status);
         }
+        return new DeleteReservationResponse(reservationId, status);
     }
 
     public List<Reservation> getUserReservations(Integer userId){
@@ -77,7 +91,8 @@ public class ReservationService {
         return reservations;
     }
 
-    public boolean editReservation(EditReservationRequest request) {
+    public EditReservationResponse editReservation(EditReservationRequest request) throws EditReservationException {
+        String status;
         Optional<Reservation> reservation = repository.findById(request.getReservationId());
         if (reservation.isPresent()){
             if(hotelHasFreeRooms(request.getStartDate(), request.getEndDate(), request.getIdRoom())) {
@@ -87,10 +102,23 @@ public class ReservationService {
                 r.setHotelsId(request.getIdHotel());
                 r.setRoomTypeId(request.getIdRoom());
                 repository.save(r);
-                return true;
+                status = "Reservation edited successfully";
+            }
+            else {
+                //todo: After modification of hotelHasFreeRooms add accurate status
+                status = "Has no free rooms...";
+                throw new EditReservationException(status);
             }
         }
-        return false;
+        else {
+            status = "Could not find reservation with id " + request.getReservationId();
+            throw new EditReservationException(status);
+        }
+
+        return new EditReservationResponse(
+                request,
+                status
+        );
     }
 
     public boolean changeReservationStatus(ChangeStatusRequest request){
